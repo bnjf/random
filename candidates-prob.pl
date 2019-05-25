@@ -11,12 +11,12 @@ my ( $b, $r, $a );
 $b = shift // 256;
 
 for ($r = 1; $r <= 256; $r += $r) {
-    for $a ( 2 .. ($b - 2) ) {
+  for ($a = ($b - 2); $a > 0; $a--) {
 
-        say "$a*$b**$r-1 ", $a * $b**$r - 1
-          if Math::GMP->new( $a * $b**$r - 1 )->probab_prime(25);
-        say "$a*$b**$r+1 ", $a * $b**$r + 1
-          if Math::GMP->new( $a * $b**$r + 1 )->probab_prime(25);
-    }
+    say "$a*$b**$r-1 ", $a * $b**$r - 1
+    if Math::GMP->new( $a * $b**$r - 1 )->probab_prime(25);
+    say "$a*$b**$r+1 ", $a * $b**$r + 1
+    if Math::GMP->new( $a * $b**$r + 1 )->probab_prime(25);
+  }
 }
 
