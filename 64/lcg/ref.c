@@ -40,7 +40,7 @@ int main(int argc,char *argv[]) {
     for (int i = 0; i < 1024; i++){
       buf[i] = f();
     }
-    fwrite(buf, 8, 1024, stdout);
+    fwrite(buf, sizeof(uint64_t), 1024, stdout);
   }
 
   return 0;
