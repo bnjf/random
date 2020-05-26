@@ -10,46 +10,54 @@
 # perform this in parallel, split the period by the column count... XXX this is
 # not ideal unless the column count is congruent to the period because the
 # other columns will overlap with previous values.
-#
-# let's split into 3 as a demo
+
+b = 10
+a = 11
+d = a * b - 1
+r = 2
+s = 1
+
+columns = 4  # width of vectors
 
 
 def f(n):
-  n = n % 109
-  return ((10**(108 - n)) // 109) % 10
+  if n < 0:
+    n = n % d
+    n = n - 1
+  else:
+    n = n % d
+  return ((b**(d - 1 - n)) // d) % b
 
 
-def c(n, b=10):
+def c(n):
   return 0 if n < b else 1
 
 
+x = 0
+y = 0
 V = [
-        (f(0 * 36), f(1 * 36), f(2 * 36)),
-        (f(0 * 36 + 1), f(1 * 36 + 1), f(2 * 36 + 1)),
-     ]
-C = [
-    c(f(0 * 36) + f(0 * 36 - 1)),
-    c(f(1 * 36) + f(1 * 36 - 1)),
-    c(f(2 * 36) + f(2 * 36 - 1)),
+    tuple([f(x * (d // columns) + y) for x in range(columns)])
+    for y in range(-r * 2, 0)
 ]
-i = 1
+i = len(V) - 1
+C = [{
+    True: 1,
+    False: 0
+}[V[i][x] < V[i - r][x] + V[i - s][x]] for x in range(columns)]
 
 import pprint
-pprint.pprint(V)
-pprint.pprint(C)
+# pprint.pprint(V)
+# pprint.pprint(C)
 
-for _ in range(34):
+#for _ in range(d-r*2):
+for _ in range(d // columns - r * 2):
   i += 1
-  V.append((
-      (V[i - 2][0] + V[i - 1][0] + C[0]) % 10,
-      (V[i - 2][1] + V[i - 1][1] + C[1]) % 10,
-      (V[i - 2][2] + V[i - 1][2] + C[2]) % 10,))
-  C = [
-      c(V[i - 2][0] + V[i - 1][0] + C[0]),
-      c(V[i - 2][1] + V[i - 1][1] + C[1]),
-      c(V[i - 2][2] + V[i - 1][2] + C[2]),
-  ]
+  V.append(
+      tuple([(V[i - r][x] + V[i - s][x] + C[x]) % b for x in range(columns)]))
+  C = [{
+      True: 1,
+      False: 0
+  }[V[i][x] < V[i - r][x] + V[i - s][x]] for x in range(columns)]
 
 pprint.pprint(V)
 pprint.pprint(C)
-
