@@ -1,0 +1,13 @@
+
+xor(a, b) = ((not a) and b) or (a and (not b)) 
+
+(r and s) 
+
+..
+
+$ show-xor() { a="${1:?}" b="${2:?}"; echo "((not $a) and $b) or ($a and (not $b))"; }
+$ show-xor "(s and r)" "(c and ($(show-xor s r)))"
+((not (s and r)) and (c and (((not s) and r) or (s and (not r))))) or ((s and r) and (not (c and (((not s) and r) or (s and (not r))))))
+
+qmc opt: c or r and c or s and r or s
+
