@@ -3,10 +3,11 @@
 # vim:set ts=2 sts=2 sw=2 et ai fdm=marker:
 
 from __future__ import division, print_function
-import sys
 
+import sys
 import functools as ft
 import itertools as it
+import multiprocessing
 
 
 def _gwc(a, x=1, r=1, b=10, g=0, W=16):
@@ -107,17 +108,24 @@ def _xorshift(a, r=4):
 
 
 @ft.lru_cache()
-def awc(x,y,c,b=2):
+def awc(x, y, c, b=2):
   return divmod(x + y + c, b)
+
+
 @ft.lru_cache()
-def awcc(x,y,c,b=2):
+def awcc(x, y, c, b=2):
   return divmod(b - 1 - x - y - c, b)
+
+
 @ft.lru_cache()
-def sbb1(x,y,c,b=2):
+def sbb1(x, y, c, b=2):
   return divmod(x - y - c, b)
+
+
 @ft.lru_cache()
-def sbb2(x,y,c,b=2):
+def sbb2(x, y, c, b=2):
   return divmod(y - x - c, b)
+
 
 def _awc(a, b=2, r=8, g=-1):
   Q = [0 for _ in range(r)]
@@ -137,7 +145,7 @@ def _awc(a, b=2, r=8, g=-1):
   R = 0
   S = r - a
 
-  f = [awc,awcc,sbb1,sbb2][g]
+  f = [awc, awcc, sbb1, sbb2][g]
 
   while True:
     yield Q[R]
@@ -215,45 +223,51 @@ mwc = _awc
 # sys.exit(0)
 # }}}
 
-def main():
+
+#def worker(r=2, a=1, gtype=0):
+def worker(args):
+  a = args['a']
+  r = args['r']
+  gtype = args['gtype']
+
+  f = mwc(a=a, r=r, b=2, g=gtype)
+  g = mwc(a=a, r=r, b=2, g=gtype)
+
+  f_period = 0
+  g_period = 0
+  while True:
+    try:
+      x = next(f)
+      y = next(g)
+      y = next(g)
+      f_period += 1
+      g_period += 2
+
+      if x != y:
+        continue
+
+      # till f reaches g
+      delta = g_period - f_period - r - r
+      buf = ""
+      while x == y and delta < g_period:
+        x = next(f)
+        y = next(g)
+        delta += 1
+
+      if delta == g_period:
+        #print('cycle', r, a, f_period, buf[:-100])
+        #print('cycle', gtype, r, a, f_period)
+        #break
+        return 'g={} r={} s={} period={}'.format(gtype, r, a, f_period)
+    except StopIteration:
+      #print('exception', r, a, f_period, g_period)
+      #break
+      return 'exception {} {} {} {}'.format(r, a, f_period, g_period)
+
+if __name__ == '__main__':
+  p = multiprocessing.Pool(processes=1)
   r = int(sys.argv[1])
-  for a in range(1, r):
-    for gtype in range(4):
-      f = mwc(a=a, r=r, b=2, g=gtype)
-      g = mwc(a=a, r=r, b=2, g=gtype)
-
-      f_period = 0
-      g_period = 0
-      while True:
-        try:
-          x = next(f)
-          y = next(g)
-          y = next(g)
-          f_period += 1
-          g_period += 2
-
-          if x != y:
-            continue
-
-          # till f reaches g
-          delta = g_period - f_period - r - r
-          buf = ""
-          while x == y and delta < g_period:
-            x = next(f)
-            y = next(g)
-            delta += 1
-            if len(buf) < 40:
-              buf += "01" [x]
-
-          if delta == g_period:
-            #print('cycle', r, a, f_period, buf[:-100])
-            print('cycle', gtype, r, a, f_period, buf[:40])
-            break
-        except StopIteration:
-          print('exception', r, a, f_period, g_period)
-          break
-      #print(r,a,f_period,g_period)
-
-import timeit
-print(timeit.timeit(main, number=1))
+  for result in p.imap_unordered(
+      worker, tuple({'r':r, 'a':a, 'gtype':g} for a in range(1, int(sys.argv[1])) for g in range(4))):
+    print(result)
 
