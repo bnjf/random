@@ -16,9 +16,8 @@ def _gwc(a, x=1, r=1, b=10, g=0, W=16):
   i = 0
   c0 = c = 1
 
-  t = tuple([((a, b, c, d))
-             for a in range(2) for b in range(2) for c in range(2)
-             for d in range(2)])
+  t = tuple([((a, b, c, d)) for a in range(2) for b in range(2)
+             for c in range(2) for d in range(2)])
 
   t_x = t[g % 16]
   t_c = t[g // 16]
@@ -109,22 +108,38 @@ def _xorshift(a, r=4):
 
 @ft.lru_cache()
 def awc(x, y, c, b=2):
-  return divmod(x + y + c, b)
+  #return divmod(x + y + c, b)
+  l = [0, 0, 0, 0, 0, 0, 0, 0]
+
+  # popcount, essentially
+  l[0b000] = (0, 0)
+  l[0b001] = l[0b010] = l[0b100] = (0, 1)
+  l[0b011] = l[0b101] = l[0b110] = (1, 0)
+  l[0b111] = (1, 1)
+  return l[x << 2 | y << 1 | c]
 
 
 @ft.lru_cache()
 def awcc(x, y, c, b=2):
-  return divmod(b - 1 - x - y - c, b)
+  #return divmod(2 * b - 1 - x - y - c, b)
+  #return divmod(-x - y - c - 1, b)
+  tx = (2 * b) - 1 - x - y - c
+  tc = x + y + c
+  return (tc // b, tx % b)
 
 
 @ft.lru_cache()
 def sbb1(x, y, c, b=2):
-  return divmod(x - y - c, b)
+  #return divmod(x - y - c, b)
+  tx = x - y - c
+  return (0 if tx >= 0 else 1, tx % b)
 
 
 @ft.lru_cache()
 def sbb2(x, y, c, b=2):
-  return divmod(y - x - c, b)
+  #return divmod(y - x - c, b)
+  tx = y - x - c
+  return (0 if tx >= 0 else 1, tx % b)
 
 
 def _awc(a, b=2, r=8, g=-1):
@@ -134,13 +149,16 @@ def _awc(a, b=2, r=8, g=-1):
   if a >= r:
     return
 
-  if g == 1:
-    c = 0
-  if g == 3:
-    c = 0
-    Q[0] = 1
-  else:
-    c = 1
+  Q[0] = 0
+  c = 1
+
+  # if g == 1:
+  #   c = 0
+  # if g == 3:
+  #   c = 0
+  #   Q[0] = 1
+  # else:
+  #   c = 1
 
   R = 0
   S = r - a
@@ -149,24 +167,9 @@ def _awc(a, b=2, r=8, g=-1):
 
   while True:
     yield Q[R]
-    #(c, Q[R]) = divmod(Q[R] + Q[S] + c, b)
-    #c = b - 1 - c
 
+    print('{} {} {} {} {} {}'.format(g, Q[S], Q[R], c, *f(Q[S], Q[R], c)))
     (c, Q[R]) = f(Q[S], Q[R], c)
-    #(c, Q[R]) = awc(Q[S], Q[R], c)
-
-    # if g == 0:
-    #   #(c, Q[R]) = divmod(Q[S] + Q[R] + c, b)
-    #   (c, Q[R]) = divmod(Q[S] + Q[R] + c, b)
-    # elif g == 1:
-    #   (c, Q[R]) = divmod(b - 1 - Q[S] - Q[R] - c, b)
-    #   #(c, Q[R]) = awcc(Q[S], Q[R], c)
-    # elif g == 2:
-    #   (c, Q[R]) = divmod(Q[S] - Q[R] - c, b)
-    # elif g == 3:
-    #   (c, Q[R]) = divmod(Q[R] - Q[S] - c, b)
-    # else:
-    #   sys.exit(1)
 
     R += 1
     S += 1
@@ -255,19 +258,44 @@ def worker(args):
         delta += 1
 
       if delta == g_period:
-        #print('cycle', r, a, f_period, buf[:-100])
-        #print('cycle', gtype, r, a, f_period)
-        #break
-        return 'g={} r={} s={} period={}'.format(gtype, r, a, f_period)
+        return (gtype, r, a, f_period)
     except StopIteration:
-      #print('exception', r, a, f_period, g_period)
-      #break
-      return 'exception {} {} {} {}'.format(r, a, f_period, g_period)
+      return None
+
 
 if __name__ == '__main__':
+  '''
+AWC     b^r+b^s-1  20  10  1049599
+AWC-c   b^r+b^s+1  20   5  1048609
+SBB-I   b^r-b^s+1  20  18   786433
+SBB-II  b^r-b^s-1  20   4  1048559
+
+g  0  r  20  s  10  period  524799
+g  1  r  20  s  5   period  524304
+g  2  r  20  s  18  period  393216
+g  3  r  20  s  4   period  524279
+'''
+
+  if worker({'r': 20, 'a': 10, 'gtype': 0})[-1] != 524799:
+    print('g=0 failed')
+    sys.exit(1)
+  if worker({'r': 20, 'a': 5, 'gtype': 1})[-1] != 524304:
+    print('g=1 failed')
+    sys.exit(1)
+  if worker({'r': 20, 'a': 18, 'gtype': 2})[-1] != 393216:
+    print('g=2 failed')
+    sys.exit(1)
+  if worker({'r': 20, 'a': 4, 'gtype': 3})[-1] != 524279:
+    print('g=3 failed')
+    sys.exit(1)
+
   p = multiprocessing.Pool(processes=1)
   r = int(sys.argv[1])
   for result in p.imap_unordered(
-      worker, tuple({'r':r, 'a':a, 'gtype':g} for a in range(1, int(sys.argv[1])) for g in range(4))):
+      worker,
+      tuple({
+          'r': r,
+          'a': a,
+          'gtype': g
+      } for a in range(3, r) for g in range(4))):
     print(result)
-
