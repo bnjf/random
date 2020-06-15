@@ -168,7 +168,7 @@ def _awc(a, b=2, r=8, g=-1):
   while True:
     yield Q[R]
 
-    print('{} {} {} {} {} {}'.format(g, Q[S], Q[R], c, *f(Q[S], Q[R], c)))
+    #print('{} {} {} {} {} {}'.format(g, Q[S], Q[R], c, *f(Q[S], Q[R], c)))
     (c, Q[R]) = f(Q[S], Q[R], c)
 
     R += 1
@@ -276,20 +276,23 @@ g  2  r  20  s  18  period  393216
 g  3  r  20  s  4   period  524279
 '''
 
-  if worker({'r': 20, 'a': 10, 'gtype': 0})[-1] != 524799:
-    print('g=0 failed')
-    sys.exit(1)
-  if worker({'r': 20, 'a': 5, 'gtype': 1})[-1] != 524304:
-    print('g=1 failed')
-    sys.exit(1)
-  if worker({'r': 20, 'a': 18, 'gtype': 2})[-1] != 393216:
-    print('g=2 failed')
-    sys.exit(1)
-  if worker({'r': 20, 'a': 4, 'gtype': 3})[-1] != 524279:
-    print('g=3 failed')
-    sys.exit(1)
+  if len(sys.argv) < 2:
+    if worker({'r': 20, 'a': 10, 'gtype': 0})[-1] != 524799:
+      print('g=0 failed')
+      sys.exit(1)
+    if worker({'r': 20, 'a': 5, 'gtype': 1})[-1] != 524304:
+      print('g=1 failed')
+      sys.exit(1)
+    if worker({'r': 20, 'a': 18, 'gtype': 2})[-1] != 393216:
+      print('g=2 failed')
+      sys.exit(1)
+    if worker({'r': 20, 'a': 4, 'gtype': 3})[-1] != 524279:
+      print('g=3 failed')
+      sys.exit(1)
+    print('test ok')
+    sys.exit(0)
 
-  p = multiprocessing.Pool(processes=1)
+  p = multiprocessing.Pool(processes=3)
   r = int(sys.argv[1])
   for result in p.imap_unordered(
       worker,
