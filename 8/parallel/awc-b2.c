@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
   unsigned int r0 = atoi(argv[1]);
   unsigned int s0 = atoi(argv[2]);
-  unsigned int r = r0 - r0, s = r0 - s0;
+  unsigned int r = -r0 % r0, s = -s0 % r0;
   B_TYPE Q[r0];
   B_TYPE c;
 
@@ -27,16 +27,24 @@ int main(int argc, char* argv[])
 
   //for (i = 0; i < r0; i++) { Q[i] = i; }
   read(0, Q, r0*sizeof(Q[0]));
-  c = -1;
+  c = 0;
 
   i = j = 0;
   while (1) {
     B_TYPE x = Q[s] ^ Q[r] ^ c;   // AWC
     //B_TYPE x = ~(Q[s] ^ Q[r] ^ c);  // AWC-c
 
+    // carry
     //c = (Q[s] & Q[r]) ^ (c & (Q[s] ^ Q[r]));
-    // by QMK optimisation:
-    c = (c | Q[r]) & (c | Q[s]) & (Q[r] | Q[s]);
+    // complemented carry
+    //c = (~Q[s] & ~c | (Q[s] ^ c) & ~Q[r]);
+    // something else
+    //c = (~Q[r] & ~c | (Q[r]^c) & Q[s]);
+    // 103
+    c = (~Q[s] & ~c | (Q[s] ^ c) & Q[r]);
+    // 123
+    // c = (~Q[s] & ~c | (~Q[s] ^ ~c) & Q[r]);
+
     Q[r] = x;
 
     buf[i++] = Q[r];

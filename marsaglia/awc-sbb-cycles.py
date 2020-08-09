@@ -108,6 +108,13 @@ def _xorshift(a, r=4):
 
 @ft.lru_cache()
 def awc(x, y, c, b=2):
+
+  t = divmod(x + y + c, b)
+  return (b - 1 - t[0], t[1])
+
+  # returns full period for 2^16+2^n-1!
+  #return ((~x & ~c | (x ^ c) & ~y) & 1, x ^ y ^ c)
+
   #return divmod(x + y + c, b)
   l = [0, 0, 0, 0, 0, 0, 0, 0]
 
