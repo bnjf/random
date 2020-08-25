@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from sympy import isprime
+from sympy import isprime, primefactors
 import sys
 
 B = int(sys.argv[1])
@@ -29,7 +29,7 @@ for result in filter(lambda n: n[3], [(
     s,
     b**r + b**s + 1,
     isprime(b**r + b**s + 1),
-    isprime((b**r + b**s + 1) // 2 - 1),)
+    isprime((b**r + b**s) // 2 - 1),)
                                       for b in [B] for r in [R]
                                       for s in range(1, S)]):
   print('AWC-c  b^r+b^s+1 {} {} {} {}'.format(
@@ -44,15 +44,16 @@ for result in filter(lambda n: n[3], [(
     s,
     b**r - b**s + 1,
     isprime(b**r - b**s + 1),
-    isprime((b**r - b**s + 1) // 2 - 1),)
+    "",)
                                       for b in [B] for r in [R]
                                       for s in range(1, S)]):
   print('SBB-I  b^r-b^s+1 {} {} {} {}'.format(
       result[0],
       result[1],
       B**result[0] - B**result[1] + 1,
-      {True: "(safe!)",
-       False: ""}[result[4]],))
+      #{True: "(safe!)", False: ""}[result[4]]
+        result[4]
+      ,))
 
 for result in filter(lambda n: n[3], [(
     r,
