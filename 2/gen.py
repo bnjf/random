@@ -9,7 +9,7 @@ import functools as ft
 import itertools as it
 import multiprocessing
 
-@ft.lru_cache()
+@ft.lru_cache(maxsize=None)
 def f_x(x, y, c, type):
   val = [
       (c) & 1,  # ['1--']
@@ -162,7 +162,7 @@ def f_x(x, y, c, type):
   ][type]
   return val & 1
 
-@ft.lru_cache()
+@ft.lru_cache(maxsize=None)
 def f_c(x, y, c, type):
   val = [
       (c) & 1,  # ['1--']
@@ -318,21 +318,22 @@ def f_c(x, y, c, type):
 @ft.lru_cache()
 def awc(x, y, c, b=2):
 
-  t = divmod(x + y + c, b)
-  return (b - 1 - t[0], t[1])
+  # .. uh, this is awc-c?
+  #t = divmod(x + y + c, b)
+  #return (b - 1 - t[0], t[1])
 
   # returns full period for 2^16+2^n-1!
   #return ((~x & ~c | (x ^ c) & ~y) & 1, x ^ y ^ c)
 
-  #return divmod(x + y + c, b)
-  l = [0, 0, 0, 0, 0, 0, 0, 0]
+  return divmod(x + y + c, b)
+  # l = [0, 0, 0, 0, 0, 0, 0, 0]
 
-  # popcount, essentially
-  l[0b000] = (0, 0)
-  l[0b001] = l[0b010] = l[0b100] = (0, 1)
-  l[0b011] = l[0b101] = l[0b110] = (1, 0)
-  l[0b111] = (1, 1)
-  return l[x << 2 | y << 1 | c]
+  # # popcount, essentially
+  # l[0b000] = (0, 0)
+  # l[0b001] = l[0b010] = l[0b100] = (0, 1)
+  # l[0b011] = l[0b101] = l[0b110] = (1, 0)
+  # l[0b111] = (1, 1)
+  # return l[x << 2 | y << 1 | c]
 
 
 @ft.lru_cache()
@@ -445,7 +446,7 @@ if __name__ == '__main__':
           'xtype': xtype,
           'ctype': ctype
       } for s in range(1, r)
-      for xtype in range(147)
+      for xtype in [23,36] #range(147)
       for ctype in range(147)
       )):
 
