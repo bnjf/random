@@ -113,10 +113,11 @@ if __name__ == '__main__':
     def isprimitive():
       ok = True
       #pf = [3, 5, 17]  #,257]
-      pf = sp.primefactors(N - 1)
+      #pf = sp.primefactors(N - 1)
       root = 2  # x root => primitive poly
-      for e in it.chain(*(map(prod, it.combinations(pf, i))
-                          for i in range(1, len(pf)))):
+      #for e in it.chain(*(map(prod, it.combinations(pf, i))
+      #                    for i in range(1, len(pf)))):
+      for e in sp.divisors(N - 1)[:-1]:
         if gf2pow(root, e, p) == 1:
           return False
       if ok and gf2pow(root, N - 1, p) == 1:
